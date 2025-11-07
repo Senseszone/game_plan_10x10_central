@@ -1,0 +1,148 @@
+// src/games/Grid10x10Central.jsx
+import React from "react";
+
+/** UI-only buňka (bez logiky chování) */
+function ButtonCell({
+  idx,
+  size = 166,
+  borderPx = 7,
+  radius = 10,
+  color = null, // "green" | "red" | "orange" | null
+  onClick,
+  disabled = false,
+}) {
+  const fill =
+    color === "green" ? "#00A499" :
+    color === "red"   ? "#D50032" :
+    color === "orange"? "#F2A900" :
+                        "#FFFFFF"; // neaktivní
+
+  return (
+    <button
+      id={`cell-${idx}`}
+      onClick={(ev) => onClick?.(idx, ev)}
+      disabled={disabled}
+      style={{
+        width: size,
+        height: size,
+        background: fill,
+        border: `${borderPx}px solid #6CACE4`, // Pantone 284 C
+        borderRadius: radius,
+        aspectRatio: "1 / 1",
+        cursor: disabled ? "default" : "pointer",
+        userSelect: "none",
+        transition: "background-color 150ms, border-color 150ms",
+        padding: 0,
+      }}
+      aria-label={`grid cell ${idx}`}
+    />
+  );
+}
+
+/** Kontejner celé herní plochy + horní lišta (fixní 4K layout) */
+export default function Grid10x10Central({
+  title = "10×10 Central",
+  timeLeftSec = 0,
+  activeColors = {}, // volitelně: { [idx:number]: "green"|"red"|"orange" }
+  onCellClick,       // volitelně: (idx, ev) => void
+  disabled = false,
+}) {
+  // Fixní 4K parametry + rámeček 160 px kolem celé obrazovky
+  const SCREEN_W = 3840, SCREEN_H = 2160;
+  const MARGIN = 160;
+
+  // Herní plocha uvnitř okraje
+  const PLAY_W = SCREEN_W - 2 * MARGIN; // 3520
+  const PLAY_H = SCREEN_H - 2 * MARGIN; // 1840
+
+  // Grid 10×10 se „small gap“ (20 px) a buňkami 166 px → přesně 1840 px na výšku
+  const GRID_SIZE = 10;
+  const GAP = 20;
+  const CELL = 166;
+  const GRID_W = GRID_SIZE * CELL + (GRID_SIZE - 1) * GAP; // 1840
+  const GRID_H = GRID_W; // 1840 (čtvercový grid)
+
+  return (
+    <div
+      style={{
+        width: SCREEN_W,
+        height: SCREEN_H,
+        background: "#1A4E8A",
+        color: "#fff",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        overflow: "hidden",
+        fontFamily: "sans-serif",
+      }}
+    >
+      {/* horní okraj = 160 px */}
+      <div style={{ height: MARGIN }} />
+
+      {/* horní lišta (výška = 160 px) */}
+      <div
+        style={{
+          width: PLAY_W,
+          height: MARGIN,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "0 40px",
+          boxSizing: "border-box",
+        }}
+      >
+        <div style={{ fontSize: 48, fontWeight: 600 }}>{Math.max(0, Math.floor(timeLeftSec))}s</div>
+        <div style={{ fontSize: 48, fontWeight: 600, textAlign: "center", flex: 1 }}>
+          {title}
+        </div>
+        {/* vyrovnávací prvek pro čisté centrování názvu */}
+        <div style={{ width: 240 }} />
+      </div>
+
+      {/* herní plocha s okrajem #6CACE4 a výškou 1840 px */}
+      <div
+        style={{
+          width: PLAY_W,
+          height: PLAY_H,
+          background: "#0D2B55",
+          border: "8px solid #6CACE4",
+          borderRadius: 20,
+          position: "relative",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          boxSizing: "border-box",
+        }}
+      >
+        {/* 10×10 CENTRAL grid (UI-only, bez chování) */}
+        <div
+          aria-label="10x10 central"
+          style={{
+            width: GRID_W,
+            height: GRID_H,
+            display: "grid",
+            gridTemplateColumns: `repeat(${GRID_SIZE}, ${CELL}px)`,
+            gridTemplateRows: `repeat(${GRID_SIZE}, ${CELL}px)`,
+            gap: GAP,
+          }}
+        >
+          {Array.from({ length: GRID_SIZE * GRID_SIZE }, (_, idx) => (
+            <ButtonCell
+              key={idx}
+              idx={idx}
+              size={CELL}
+              borderPx={7}
+              radius={10}
+              color={activeColors[idx] || null}
+              onClick={onCellClick}
+              disabled={disabled}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* dolní okraj = 160 px */}
+      <div style={{ height: MARGIN }} />
+    </div>
+  );
+}
